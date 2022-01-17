@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="KotlinJavaRuntime">
+    <archive path="/snap/intellij-idea-community/342/plugins/Kotlin/kotlinc/lib/kotlin-stdlib.jar" />
+    <archive path="/snap/intellij-idea-community/342/plugins/Kotlin/kotlinc/lib/kotlin-reflect.jar" />
+    <archive path="/snap/intellij-idea-community/342/plugins/Kotlin/kotlinc/lib/kotlin-test.jar" />
+  </library>
+</eclipse-userlibraries>
+
