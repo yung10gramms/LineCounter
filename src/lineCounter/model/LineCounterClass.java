@@ -100,6 +100,10 @@ public class LineCounterClass {
     public void getFilesHelp(String dir, Vector<File> files)
     {
         File[] fileArray = new File(dir).listFiles();
+
+        if(fileArray == null)
+            return;
+
         for(int i = 0; i < fileArray.length; i ++)
         {
             if(! fileArray[i].isDirectory())

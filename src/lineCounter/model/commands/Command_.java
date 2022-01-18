@@ -1,39 +1,26 @@
 package lineCounter.model.commands;
 
-import lineCounter.model.consoleInterface.interfaces.InputDevice;
-import lineCounter.model.consoleInterface.interfaces.OutputDevice;
+import lineCounter.model.consoleInterface.interfaces.InputTerminal;
+import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
 
 import java.io.Serializable;
 
 public class Command_ implements Comparable<Command_>, Serializable {
-    private String name;
+    private final String name;
     private String[] params;
 
-    private String execution;
-    private String description;
+
+    private final String description;
 
     private String manual;
 
-    public Command_(String name)
-    {
-        this.name = name;
-    }
-
-    private InputDevice inputDevice;
-    private OutputDevice outputDevice;
+    private InputTerminal inputTerminal;
+    private OutputTerminal outputTerminal;
 
     public Command_(String name, String description)
     {
         this.name = name;
         this.description = description;
-    }
-
-    public Command_(String name, String param1, String ex)
-    {
-        this.name = name;
-        params = new String[1];
-        params[0] = param1;
-        this.execution = ex;
     }
 
     public String getName()
@@ -46,10 +33,6 @@ public class Command_ implements Comparable<Command_>, Serializable {
         return params;
     }
 
-    public String getExecution() {
-        return execution;
-    }
-
     /** splits  */
     public void setParams(String paramsInString)
     {
@@ -57,21 +40,19 @@ public class Command_ implements Comparable<Command_>, Serializable {
 
         for(int i = 0; i < params.length; i ++)
         {
-            params[i].trim();
+            params[i] = params[i].trim();
         }
     }
 
-    public void setExecution(String execution) {
-        this.execution = execution;
+    public void setParameters(String[] params)
+    {
+        this.params = params;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     public void setManual(String man)
     {
@@ -98,20 +79,16 @@ public class Command_ implements Comparable<Command_>, Serializable {
         return getName().compareTo(command_.getName());
     }
 
-    public InputDevice getInputDevice() {
-        return inputDevice;
+    public void setInputDevice(InputTerminal inputTerminal) {
+        this.inputTerminal = inputTerminal;
     }
 
-    public void setInputDevice(InputDevice inputDevice) {
-        this.inputDevice = inputDevice;
+    public OutputTerminal getOutputDevice() {
+        return outputTerminal;
     }
 
-    public OutputDevice getOutputDevice() {
-        return outputDevice;
-    }
-
-    public void setOutputDevice(OutputDevice outputDevice) {
-        this.outputDevice = outputDevice;
+    public void setOutputDevice(OutputTerminal outputTerminal) {
+        this.outputTerminal = outputTerminal;
     }
 
 }

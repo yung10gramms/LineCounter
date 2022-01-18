@@ -4,14 +4,18 @@ import lineCounter.model.SystemHandler;
 import lineCounter.model.commands.CommandSystem;
 import lineCounter.model.consoleInterface.interfaces.Colored;
 import lineCounter.model.consoleInterface.interfaces.ConsolePrinter;
-import lineCounter.model.consoleInterface.interfaces.InputDevice;
-import lineCounter.model.consoleInterface.interfaces.OutputDevice;
+import lineCounter.model.consoleInterface.interfaces.InputTerminal;
+import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
+import lineCounter.model.devices.Device;
+import lineCounter.model.devices.InputDevice;
+import lineCounter.model.devices.OutputDevice;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 
-public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, InputDevice, OutputDevice {
+public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
+        InputTerminal, OutputTerminal, InputDevice, OutputDevice {
     private Theme theme;
     private static final Theme defaultTheme = new Theme(Color.black, Color.white, Color.green);
 
@@ -28,10 +32,18 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
 
     private ConsolePanel panel;
 
+    private String[] bufferedData;
+
+    private InputDevice inputDevice;
+    private OutputDevice outputDevice;
+
     public ConsoleText(CommandSystem system, ConsolePanel panel)
     {
         System.gc();
         this.panel = panel;
+
+        setInputDevice((InputDevice) this);
+        setOutputDevice((OutputDevice) this);
 
         setColorsToDefaults();
         setFont(defaultFont);
@@ -51,6 +63,12 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
     public ConsolePanel panel()
     {
         return panel;
+    }
+
+    @Override
+    public String getName()
+    {
+        return this.panel.parent().getName();
     }
 
     public void updateProgress(int per, int outOf)
@@ -94,7 +112,7 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
             doc.remove(entireText.length(), getCommand().length());
         } catch (BadLocationException b)
         {
-            print("ex");
+           System.out.println("exeption");
         }
 
     }
@@ -105,6 +123,7 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
         lastCommand.trim();
         entireText.trim();
         lastCommand = lastCommand.replace(entireText, "");
+        bufferedData = new String[]{lastCommand};
         return lastCommand;
     }
 
@@ -121,7 +140,7 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
 
     public void print(String s)
     {
-        System.out.println(s);
+        appendToPane(s);
     }
 
     public void startNextLine()
@@ -200,4 +219,41 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter, I
         system.close();
     }
 
+    //todo
+    @Override
+    public void passInput(String[] in) {
+        bufferedData = in;
+        String in_string = "\n";
+        for(String buf : in)
+        {
+            in_string = in_string + buf + "\n";
+        }
+        in_string.replace("\n\n", "\n");
+        appendToPane(in_string);
+    }
+
+    @Override
+    public String[] passOutput() {
+        return new String[]{getCommand()};
+    }
+
+    @Override
+    public OutputDevice getOutputDevice() {
+        return outputDevice;
+    }
+
+    @Override
+    public InputDevice getInputDevice() {
+        return inputDevice;
+    }
+
+    @Override
+    public void setInputDevice(InputDevice inputDevice) {
+        this.inputDevice = inputDevice;
+    }
+
+    @Override
+    public void setOutputDevice(OutputDevice outputDevice) {
+        this.outputDevice = outputDevice;
+    }
 }

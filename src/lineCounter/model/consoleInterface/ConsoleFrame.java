@@ -12,26 +12,9 @@ public class ConsoleFrame extends JFrame implements Colored
     private Theme theme;
     private static final Theme defaultTheme = new Theme(Color.black, Color.white, Color.green);
     private ConsolePanel mainPanel;
-    private CommandSystem system;
-    private int num;
+    private final CommandSystem system;
+    private final int num;
 
-
-
-    public ConsoleFrame(CommandSystem system)
-    {
-        setColorsToDefaults();
-
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.system = system;
-
-        mainPanel = new ConsolePanel(system, this);
-        setContentPane(mainPanel);
-        pack();
-        //setResizable(false);
-        setVisible(true);
-
-        addWindowListener(new ConsoleView(system));
-    }
 
     public int getNum()
     {
@@ -40,9 +23,9 @@ public class ConsoleFrame extends JFrame implements Colored
 
     public ConsoleFrame(CommandSystem system, ConsoleView viewer)
     {
-        super("dev" + SystemHandler.getNumberOfWindows());
+        this.num = SystemHandler.getNumberForName();
+        setTitle("dev" + num);
         setName(getTitle());
-        num = SystemHandler.getNumberOfWindows();
 
         setColorsToDefaults();
 

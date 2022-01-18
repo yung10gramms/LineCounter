@@ -2,8 +2,6 @@ package lineCounter.model.consoleInterface;
 
 import lineCounter.model.SystemHandler;
 import lineCounter.model.consoleInterface.interfaces.CommandsController;
-import lineCounter.model.consoleInterface.interfaces.InputDevice;
-import lineCounter.model.consoleInterface.interfaces.OutputDevice;
 
 
 import java.awt.event.KeyEvent;
@@ -29,13 +27,13 @@ public class ConsoleView implements KeyListener, WindowListener {
 
     public void close()
     {
-        text.panel().parent().setVisible(false);
         SystemHandler.removeDev(text.panel().parent().getNum());
+        text.panel().parent().setVisible(false);
     }
 
     public String[] clear()
     {
-        ConsoleFrame frame = (ConsoleFrame) text.panel().parent();
+        ConsoleFrame frame = text.panel().parent();
         frame.reset();
         return new String[] {""};
     }
@@ -86,7 +84,6 @@ public class ConsoleView implements KeyListener, WindowListener {
         if(SystemHandler.getNumberOfWindows() > 1)
         {
             fr.setVisible(false);
-            fr = null;
             this.commandSystem.close();
             return;
         }

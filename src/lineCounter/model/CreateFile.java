@@ -1,13 +1,18 @@
 package lineCounter.model;
 
 import java.io.File;  // Import the File class
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;  // Import the IOException class to handle errors
+import java.util.Scanner;
+import java.util.Vector;
 
 public class CreateFile {
 
     private String filestr = "C:/Users/konst/Desktop/all text.txt";
     private FileWriter myWriter;
+
+    File myObj;
 
     public CreateFile()
     {
@@ -23,7 +28,8 @@ public class CreateFile {
         try
         {
             myWriter = new FileWriter(filestr);
-            File myObj = new File(filestr);
+            if(myObj == null)
+                myObj = new File(filestr);
             if (myObj.createNewFile()) {
                 System.out.println("File created: " + myObj.getName());
             } else {
@@ -31,6 +37,14 @@ public class CreateFile {
             }
         } catch (IOException e) {
             //e.printStackTrace();
+        }
+    }
+
+    public void fileWriteAll(String[] str)
+    {
+        for(String stringBuf : str)
+        {
+            fileWrite(stringBuf);
         }
     }
 
@@ -43,6 +57,38 @@ public class CreateFile {
         {
 
         }
+    }
+
+    public String[] readAll()
+    {
+        Vector<String> reader = new Vector<>();
+        if(myObj == null)
+            myObj = new File(filestr);
+        try {
+            Scanner myReader = new Scanner(myObj);
+            while(myReader.hasNextLine())
+            {
+                String s = myReader.nextLine();
+                reader.add(s);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return reader.toArray(new String[reader.size()]);
+    }
+
+    public String fileRead()
+    {
+        if(myObj == null)
+            myObj = new File(filestr);
+        try {
+            Scanner myReader = new Scanner(myObj);
+            String s = myReader.nextLine();
+            return s;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void fileClose()
