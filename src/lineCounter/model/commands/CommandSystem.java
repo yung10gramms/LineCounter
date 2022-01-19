@@ -4,9 +4,9 @@ import lineCounter.model.LineCounterClass;
 import lineCounter.model.SystemHandler;
 import lineCounter.model.consoleInterface.*;
 import lineCounter.model.consoleInterface.interfaces.CommandsController;
-import lineCounter.model.consoleInterface.interfaces.ConsolePrinter;
-import lineCounter.model.consoleInterface.interfaces.InputTerminal;
-import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.InputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.OutputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.Terminal;
 import lineCounter.model.devices.Device;
 import lineCounter.model.devices.InputDevice;
 import lineCounter.model.devices.OutputDevice;
@@ -31,7 +31,7 @@ public class CommandSystem implements CommandsController {
 
     private int currentCommandIndex;
 
-    private ConsolePrinter consolePrinter;
+    private Terminal consolePrinter;
 
     private static final String[] no_output_str = {""};
     private static final String[] command_not_found = {"\ncommand not found\n"};
@@ -55,6 +55,9 @@ public class CommandSystem implements CommandsController {
         system_commands = CommandDatabase.getCommands();
         commandsInserted = StorageHandler.loadCommandHistory(currentPath);
         consoleView = new ConsoleView(this);
+
+        if(commandsInserted.size() != 0)
+            currentCommandIndex = commandsInserted.size() - 1;
     }
 
     public ConsoleView getConsoleView()
@@ -86,7 +89,7 @@ public class CommandSystem implements CommandsController {
             consolePrinter.print(commandsInserted.get(currentCommandIndex));
     }
 
-    public void setConsolePrinter(ConsolePrinter consolePrinter)
+    public void setConsolePrinter(Terminal consolePrinter)
     {
         this.consolePrinter = consolePrinter;
     }
@@ -99,14 +102,22 @@ public class CommandSystem implements CommandsController {
         }
     }
 
+    /**
+     *      function that gets a string, and calls three adhesive functions, so that
+     *      the command(s) will start running.
+     * @param
+     *      command_string the command that the user inserted before pressing enter.
+     * */
     public void processCommand(String command_string)
     {
-        System.out.println("command string: <"+command_string+ ">");
         if(! command_string.contentEquals(""))
         {
+            /* get devices inserted */
             Vector<Device> devicesPipeline =  getDevices(command_string);
             if(devicesPipeline == null)
                 return;
+            /* since we have a pipeline of devices passing one's input to the output
+            * of the following one, we need to connect them all */
             pipeAll(devicesPipeline);
             runPipeLine(devicesPipeline);
 
@@ -119,22 +130,22 @@ public class CommandSystem implements CommandsController {
 
 
 
-    /* todo: focus here */
+    /**
+     * function that gets a string, splits it by " | ", and gets a device based on their name
+     * */
     public Vector<Device> getDevices(String commandString)
     {
         String token = " \\| ";
         String[] commandStrArray = commandString.split(token);
-        //String[] commandStrArray = splitByString(commandString, '|');
         Vector<Device> devicesPipeline = new Vector<>();
         for(String cur : commandStrArray)
         {
-            System.out.println("cur: "+cur);
             /* if it's the token, just skip it */
             if(! cur.trim().contentEquals(token.trim()))
             {
                 try
                 {
-                    /* firstly, we try to cast it to a device */
+                    /* firstly, we try to cache it for efficiency */
                     Device dev = SystemHandler.toDevice(cur);
 
                     if(dev == null)
@@ -218,7 +229,7 @@ public class CommandSystem implements CommandsController {
                         printer.passInput(printer.getInputDevice().passOutput());
                         if(i == devicePipeline.size() - 1)
                         {
-                            ConsolePrinter cons = (ConsolePrinter) printer;
+                            Terminal cons = (Terminal) printer;
                             cons.print("\n");
                             cons.executeCommand(printer.getInputDevice().passOutput());
                             cons.startNextLine();
@@ -227,8 +238,8 @@ public class CommandSystem implements CommandsController {
                                 if(SystemHandler.getType(printer.getInputDevice().getName())
                                         == SystemHandler.TYPE_TERMINAL)
                                 {
-                                    ConsolePrinter ancestorPrinter =
-                                            (ConsolePrinter) printer.getInputDevice();
+                                    Terminal ancestorPrinter =
+                                            (Terminal) printer.getInputDevice();
                                     ancestorPrinter.startNextLine();
                                 }
                             }
@@ -344,6 +355,10 @@ public class CommandSystem implements CommandsController {
             //todo revisit
             program.getOutputDevice().passInput(klk(program.getCommand().getOutputDevice(), 5000));
         }
+        if(program.getName().contentEquals("devs"))
+        {
+            program.getOutputDevice().passInput(devs());
+        }
     }
 
 
@@ -352,7 +367,6 @@ public class CommandSystem implements CommandsController {
         if(SystemHandler.getNumberOfWindows() > 1)
         {
             consoleView.close();
-
             return;
         }
         exitOperation();
@@ -382,11 +396,6 @@ public class CommandSystem implements CommandsController {
     }
 
 
-/*
- for(String current : commandFound.getParams())
-                {
-                    System.out.println("????String: "+current);
-                }*/
     private Command_ searchCommand(String name)
     {
         final String splitToken = " \\| ";
@@ -839,5 +848,18 @@ public class CommandSystem implements CommandsController {
         return out;
     }
 
+    public String[] devs()
+    {
+        String[] actives = new String[SystemHandler.activeDevices.size() + 2];
+        actives[0] = "===============================================\nActive devices:";
+        int i = 1;
+        for(Device dev : SystemHandler.activeDevices)
+        {
+            actives[i] = i+ ". " +dev.getName();
+            i++;
+        }
+        actives[actives.length - 1] = "===============================================";
+        return actives;
+    }
 
 }

@@ -6,9 +6,19 @@ import java.util.Vector;
 public class CommandDatabase {
 
     public static final String tabSpaces = "                  ";
+    private static boolean generated = false;
+    private static final Vector<Command_> commands = getCommands();
+
+    private CommandDatabase()
+    {
+
+    }
 
     public static Vector<Command_> getCommands()
     {
+        if(generated)
+            return commands;
+
         Vector<Command_> output = new Vector<>();
         output.add(new Command_("help", "prints all commands"));
         output.add(new Command_("linecounter", "counts the lines"));
@@ -32,6 +42,7 @@ public class CommandDatabase {
         output.add(new Command_("jLin", "line counter non comments for java code"));
         output.add(new Command_("cLin", "line counter non comments for c code"));
         output.add(new Command_("klk", "h kolokythia"));
+        output.add(new Command_("devs", "view active devices"));
 
         output.get(0).setManual("none",
                 "Pretty self explanatory. " +
@@ -99,8 +110,15 @@ public class CommandDatabase {
                 "files");
         output.get(20).setManual("none/path", "Like the \"lcc\" command, but only for .c and .h " +
                 "files");
-
+        output.get(21).setManual("none", "The classic non-fun game of kolokythia.");
+        output.get(22).setManual("none", "See active devices. There is a chance that" +
+                "programs are never killed. This does not affect the functionality of the program, nor " +
+                "do they occupy some space, preventing other programs from being executed, except for their" +
+                " physical space in RAM, of course.");
         Collections.sort(output);
+
+        generated = true;
+
         return output;
     }
 }

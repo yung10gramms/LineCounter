@@ -3,10 +3,8 @@ package lineCounter.model.consoleInterface;
 import lineCounter.model.SystemHandler;
 import lineCounter.model.commands.CommandSystem;
 import lineCounter.model.consoleInterface.interfaces.Colored;
-import lineCounter.model.consoleInterface.interfaces.ConsolePrinter;
-import lineCounter.model.consoleInterface.interfaces.InputTerminal;
-import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
-import lineCounter.model.devices.Device;
+import lineCounter.model.consoleInterface.interfaces.terminal.InputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.OutputTerminal;
 import lineCounter.model.devices.InputDevice;
 import lineCounter.model.devices.OutputDevice;
 
@@ -14,23 +12,23 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 
-public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
+public class ConsoleText extends JTextPane implements Colored,
         InputTerminal, OutputTerminal, InputDevice, OutputDevice {
     private Theme theme;
     private static final Theme defaultTheme = new Theme(Color.black, Color.white, Color.green);
 
-    private final Font defaultFont = new Font("Dialog", Font.PLAIN, 14);
+    private static final Font defaultFont = new Font("Dialog", Font.PLAIN, 14);
 
     private final String openingString =
             "\n====================================================\n" +
             "Welcome to this console simulator. Type 'help' to view available commands\n" +
             "====================================================\n";
-    private CommandSystem system;
+    private final CommandSystem system;
 
     private String entireText;
     private String lastCommand;
 
-    private ConsolePanel panel;
+    private final ConsolePanel panel;
 
     private String[] bufferedData;
 
@@ -42,8 +40,8 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
         System.gc();
         this.panel = panel;
 
-        setInputDevice((InputDevice) this);
-        setOutputDevice((OutputDevice) this);
+        setInputDevice(this);
+        setOutputDevice(this);
 
         setColorsToDefaults();
         setFont(defaultFont);
@@ -71,31 +69,6 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
         return this.panel.parent().getName();
     }
 
-    public void updateProgress(int per, int outOf)
-    {
-        deleteCommand();
-
-        int entireLength = 50;
-        int filled = (per/outOf)*entireLength;
-
-        char[] st = new char[entireLength];
-        for(int i = 0; i < entireLength; i ++)
-        {
-            if(i < filled)
-            {
-                st[i] = '=';
-            }
-            else
-            {
-                st[i] = '-';
-            }
-        }
-
-
-        String generatedString = String.valueOf(st);
-        appendToPane("\n"+generatedString, theme.getMisc());
-    }
-
     public String[] clear()
     {
         ConsoleFrame frame = (ConsoleFrame) panel.parent();
@@ -106,7 +79,7 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
     public void deleteCommand()
     {
         DefaultStyledDocument doc = (DefaultStyledDocument) getStyledDocument();
-        getText().replace(getText(), entireText);
+        //getText().replace(getText(), entireText);
         try
         {
             doc.remove(entireText.length(), getCommand().length());
@@ -120,8 +93,8 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
     public String getCommand()
     {
         lastCommand = getText();
-        lastCommand.trim();
-        entireText.trim();
+        //lastCommand.trim();
+        //entireText.trim();
         lastCommand = lastCommand.replace(entireText, "");
         bufferedData = new String[]{lastCommand};
         return lastCommand;
@@ -223,13 +196,13 @@ public class ConsoleText extends JTextPane implements Colored, ConsolePrinter,
     @Override
     public void passInput(String[] in) {
         bufferedData = in;
-        String in_string = "\n";
+        StringBuilder in_string = new StringBuilder("\n");
         for(String buf : in)
         {
-            in_string = in_string + buf + "\n";
+            in_string.append(buf).append("\n");
         }
-        in_string.replace("\n\n", "\n");
-        appendToPane(in_string);
+        in_string.toString().replace("\n\n", "\n");
+        appendToPane(in_string.toString());
     }
 
     @Override

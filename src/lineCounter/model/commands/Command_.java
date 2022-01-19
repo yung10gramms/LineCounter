@@ -1,7 +1,7 @@
 package lineCounter.model.commands;
 
-import lineCounter.model.consoleInterface.interfaces.InputTerminal;
-import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.InputTerminal;
+import lineCounter.model.consoleInterface.interfaces.terminal.OutputTerminal;
 
 import java.io.Serializable;
 

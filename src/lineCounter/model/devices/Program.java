@@ -1,8 +1,6 @@
 package lineCounter.model.devices;
 
 import lineCounter.model.commands.Command_;
-import lineCounter.model.consoleInterface.interfaces.InputTerminal;
-import lineCounter.model.consoleInterface.interfaces.OutputTerminal;
 
 public class Program implements InputDevice, OutputDevice {
     private Command_ command;

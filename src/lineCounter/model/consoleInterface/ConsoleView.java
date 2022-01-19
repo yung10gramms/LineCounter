@@ -14,6 +14,7 @@ public class ConsoleView implements KeyListener, WindowListener {
     CommandsController commandSystem;
     ConsoleText text;
 
+    private ConsoleFrame frameToClose;
 
     public ConsoleView(CommandsController commandSystem)
     {
@@ -23,12 +24,6 @@ public class ConsoleView implements KeyListener, WindowListener {
     @Override
     public void keyTyped(KeyEvent keyEvent) {
 
-    }
-
-    public void close()
-    {
-        SystemHandler.removeDev(text.panel().parent().getNum());
-        text.panel().parent().setVisible(false);
     }
 
     public String[] clear()
@@ -46,6 +41,8 @@ public class ConsoleView implements KeyListener, WindowListener {
     @Override
     public void keyPressed(KeyEvent keyEvent) {
         ConsoleText t = (ConsoleText) keyEvent.getSource();
+
+        frameToClose = t.panel().parent();
 
         commandSystem.setConsolePrinter(t);
         commandSystem.updateStdInStdOut(t, t);
@@ -80,14 +77,19 @@ public class ConsoleView implements KeyListener, WindowListener {
 
     @Override
     public void windowClosing(WindowEvent windowEvent) {
-        ConsoleFrame fr = (ConsoleFrame)  windowEvent.getSource();
+        frameToClose = (ConsoleFrame)  windowEvent.getSource();
         if(SystemHandler.getNumberOfWindows() > 1)
         {
-            fr.setVisible(false);
             this.commandSystem.close();
             return;
         }
         this.commandSystem.exitOperation();
+    }
+
+    public void close()
+    {
+        frameToClose.setVisible(false);
+        SystemHandler.removeDev(frameToClose.getNum());
     }
 
     @Override

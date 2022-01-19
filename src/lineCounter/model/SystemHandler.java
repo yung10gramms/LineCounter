@@ -28,6 +28,11 @@ public class SystemHandler {
     public static final int TYPE_TERMINAL = 3;
     public static final int TYPE_NON_EXISTING = 3;
 
+    private SystemHandler()
+    {
+        // no instantiation allowed
+    }
+
     public static int getType(String word)
     {
         if(getDev(word.trim()) != null)
@@ -86,6 +91,7 @@ public class SystemHandler {
     /** find in windows list */
     private static int find(int num)
     {
+        System.out.println("trying to find num " + num);
         if(windows.size() == 0)
             return -1;
         for(int i = 0; i < windows.size(); i ++)
@@ -98,7 +104,9 @@ public class SystemHandler {
 
     public static void removeDev(int num)
     {
+
         int k = find(num);
+
         if(k < 0)
             return;
         try
@@ -106,7 +114,7 @@ public class SystemHandler {
             activeDevices.remove(windows.get(k).mainPanel().consoleText());
         } catch (NullPointerException nex)
         {
-            //...
+            nex.printStackTrace();
         }
         windows.remove(k);
         numberOfWindows--;
@@ -129,6 +137,7 @@ public class SystemHandler {
         return null;
     }
 
+
     public static int getNumberOfWindows()
     {
         return numberOfWindows;
@@ -138,11 +147,15 @@ public class SystemHandler {
     {
         int counter = 0;
 
-        for (ConsoleFrame window : windows) {
-            if (counter == window.getNum()) {
-                counter++;
-            } else {
-                return counter;
+        boolean repeat = true;
+        while(repeat)
+        {
+            repeat = false;
+            for (ConsoleFrame window : windows) {
+                if (counter == window.getNum()) {
+                    counter++;
+                    repeat = true;
+                }
             }
         }
         return counter;
