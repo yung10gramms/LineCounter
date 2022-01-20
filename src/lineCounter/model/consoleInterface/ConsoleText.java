@@ -11,6 +11,10 @@ import lineCounter.model.devices.OutputDevice;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 public class ConsoleText extends JTextPane implements Colored,
         InputTerminal, OutputTerminal, InputDevice, OutputDevice {
@@ -51,11 +55,8 @@ public class ConsoleText extends JTextPane implements Colored,
         setMinimumSize(new Dimension(700, 500));
 
         this.system = system;
-        //addKeyListener(system);
         addKeyListener(system.getConsoleView());
-        System.out.println(getFont().getFontName());
         startNextLine();
-
     }
 
     public ConsolePanel panel()

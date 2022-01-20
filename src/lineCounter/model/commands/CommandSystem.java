@@ -56,6 +56,8 @@ public class CommandSystem implements CommandsController {
         commandsInserted = StorageHandler.loadCommandHistory(currentPath);
         consoleView = new ConsoleView(this);
 
+        System.out.println(System.getenv());
+
         if(commandsInserted.size() != 0)
             currentCommandIndex = commandsInserted.size() - 1;
     }

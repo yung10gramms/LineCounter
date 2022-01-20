@@ -38,12 +38,12 @@ public class StorageHandler {
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
             return (Vector<String>) objectInputStream.readObject();
         } catch (FileNotFoundException e) {
-            //e.printStackTrace();
+            /* skip exception */
             System.out.println("you are the only (fnf) exception");
         } catch (IOException e) {
-            //e.printStackTrace();
+            /* skip exception */
         } catch (ClassNotFoundException e) {
-            //e.printStackTrace();
+            /* skip exception */
             System.out.println("you are the only (class) exception");
         }
         System.out.println("you are the only (input) exception");
