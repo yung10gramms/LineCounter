@@ -6,6 +6,4 @@ public interface Terminal {
     public void printCommandNotFound();
     public void close();
     public void startNextLine();
-
-
 }

@@ -12,6 +12,8 @@ public class LineCounterClass {
 
     private String outputPath;
 
+    public static final String startHighlight = "<\"";
+    public static final String endHighlight   = "\">";
 
     public LineCounterClass(String path, String outputPath) {
         filecreator = new CreateFile(outputPath);
@@ -178,6 +180,65 @@ public class LineCounterClass {
     public int enumerateFiles()
     {
         return getFiles().size();
+    }
+
+    /** basically grep */
+    public Vector<String> findPattern(String pattern)
+    {
+        Vector<String> output = new Vector<>();
+        File file = new File(path);
+
+        patternHelpRecursion(output, file, pattern);
+
+        return output;
+    }
+
+    private void patternHelpRecursion(Vector<String> output, File file, String pattern)
+    {
+        if(! file.exists())
+        {
+            return;
+        }
+        if(file.isDirectory())
+        {
+            File[] filesInDirectory = file.listFiles();
+            for(File current : filesInDirectory)
+            {
+                patternHelpRecursion(output, current, pattern);
+            }
+        } else
+        {
+            patternHelp(output, file, pattern);
+        }
+    }
+
+    private void patternHelp(Vector<String> output, File current, String pattern)
+    {
+        try {
+            Scanner scanner = new Scanner(current);
+            boolean patternFound = false;
+
+            int lineIndex = 1;
+
+            while(scanner.hasNextLine())
+            {
+                String buffer = scanner.nextLine();
+                if(buffer.contains(pattern))
+                {
+                    if(! patternFound)
+                        output.add("File: " + current.getName());
+                    output.add("line " + lineIndex + ": " +
+                            buffer.replace(pattern, startHighlight+pattern+endHighlight));
+                    patternFound = true;
+                }
+                lineIndex++;
+            }
+
+
+        } catch (FileNotFoundException e) {
+            /* dead code */
+            e.printStackTrace();
+        }
     }
 
 }

@@ -1,15 +1,15 @@
 package lineCounter.model;
 
-import java.io.File;  // Import the File class
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;  // Import the IOException class to handle errors
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.Vector;
 
 public class CreateFile {
 
-    private String filestr = "C:/Users/konst/Desktop/all text.txt";
+    private String filestr = "/";
     private FileWriter myWriter;
 
     File myObj;

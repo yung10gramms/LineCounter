@@ -1,5 +1,7 @@
 package lineCounter.model.commands;
 
+import lineCounter.model.LineCounterClass;
+
 import java.util.Collections;
 import java.util.Vector;
 
@@ -20,29 +22,32 @@ public class CommandDatabase {
             return commands;
 
         Vector<Command_> output = new Vector<>();
-        output.add(new Command_("help", "prints all commands"));
-        output.add(new Command_("linecounter", "counts the lines"));
-        output.add(new Command_("man", "manual for a certain command"));
-        output.add(new Command_("cd", "change directory"));
-        output.add(new Command_("ls", "list dir contents"));
-        output.add(new Command_("exit", "close window"));
-        output.add(new Command_("close", "close window"));
-        output.add(new Command_("clear", "clears console"));
-        output.add(new Command_("clc", "clears console"));
-        output.add(new Command_("cmd", "view command history"));
-        output.add(new Command_("ram", "view ram settings"));
-        output.add(new Command_("win", "open new terminal"));
-        output.add(new Command_("gc", "clear ram"));
-        output.add(new Command_("terminate", "terminate application"));
-        output.add(new Command_("echo", "print stdin to stdout"));
-        output.add(new Command_("cat", "print a file to the stdout"));
-        output.add(new Command_("ch", "clear command history"));
-        output.add(new Command_("ld", "undo clear history"));
-        output.add(new Command_("lcc", "line counter non comments"));
-        output.add(new Command_("jLin", "line counter non comments for java code"));
-        output.add(new Command_("cLin", "line counter non comments for c code"));
-        output.add(new Command_("klk", "h kolokythia"));
-        output.add(new Command_("devs", "view active devices"));
+        output.add(Command_.getCommand_("help", "prints all commands"));
+        output.add(Command_.getCommand_("linecounter", "counts the lines"));
+        output.add(Command_.getCommand_("man", "manual for a certain command"));
+        output.add(Command_.getCommand_("cd", "change directory"));
+        output.add(Command_.getCommand_("ls", "list dir contents"));
+        output.add(Command_.getCommand_("exit", "close window"));
+        output.add(Command_.getCommand_("close", "close window"));
+        output.add(Command_.getCommand_("clear", "clears console"));
+        output.add(Command_.getCommand_("clc", "clears console"));
+        output.add(Command_.getCommand_("cmd", "view command history"));
+        output.add(Command_.getCommand_("ram", "view ram settings"));
+        output.add(Command_.getCommand_("win", "open new terminal"));
+        output.add(Command_.getCommand_("gc", "clear ram"));
+        output.add(Command_.getCommand_("terminate", "terminate application"));
+        output.add(Command_.getCommand_("echo", "print stdin to stdout"));
+        output.add(Command_.getCommand_("cat", "print a file to the stdout"));
+        output.add(Command_.getCommand_("ch", "clear command history"));
+        output.add(Command_.getCommand_("ld", "undo clear history"));
+        output.add(Command_.getCommand_("lcc", "line counter non comments"));
+        output.add(Command_.getCommand_("jLin", "line counter non comments for java code"));
+        output.add(Command_.getCommand_("cLin", "line counter non comments for c code"));
+        output.add(Command_.getCommand_("klk", "h kolokythia"));
+        output.add(Command_.getCommand_("devs", "view active devices"));
+        output.add(Command_.getCommand_("grep", "find pattern in file"));
+        output.add(Command_.getCommand_("env", "get environment variables"));
+        output.add(Command_.getCommand_("whoami", "get user name"));
 
         output.get(0).setManual("none",
                 "Pretty self explanatory. " +
@@ -59,8 +64,8 @@ public class CommandDatabase {
                 " history in your at the time selected directory when you close it. For compatibility reasons, and " +
                 "seeing that this is a rather small project, paths are changeable and not that solid. By the way, " +
                 "in LineCounter project, relative paths don't start with \"/\", only absolute paths do. the command" +
-                " for moving ti the parent directory is the same as linux (that is cd ..), but you cannot move more than" +
-                " one directory upwards at a time.");
+                " for moving ti the parent directory is the same as linux (that is cd ..), and you cannot move more than" +
+                " one directory upwards at a time by typing \"../..\".");
         output.get(4).setManual("none", "list files in current directory. Such files can be " +
                 "regular files, or directories.");
         output.get(5).setManual("none", "absolutely equivalent to the command \"close\", " +
@@ -82,7 +87,8 @@ public class CommandDatabase {
                 "can see latest commands with up/down arrow keys.");
         output.get(10).setManual("none", "View ram information. Reminder: we are running " +
                 "on a java virtual machine. So all RAM info refers to the currently running VM.");
-        output.get(11).setManual("none", "Opens a new window. This will not affect anything, " +
+        output.get(11).setManual("none", "Opens a new window (shortcut: Ctrl+n). " +
+                "This will not affect anything, " +
                 "the two (or more) windows will be totally independent, and close/exit operations will only close " +
                 "the selected Frame. Nonetheless, there is a chance that your command history gets tangled, since its " +
                 "global. This could fix if each window was working on a different Directory (see the \"cd\" command).");
@@ -115,6 +121,19 @@ public class CommandDatabase {
                 "programs are never killed. This does not affect the functionality of the program, nor " +
                 "do they occupy some space, preventing other programs from being executed, except for their" +
                 " physical space in RAM, of course.");
+        output.get(23).setManual("pattern (and file to search in)", "Search for patterns " +
+                "in a directory or a regular file. The syntax of the command is like this: " +
+                LineCounterClass.startHighlight+"grep -f dir/to/search" +LineCounterClass.endHighlight+
+                " -e pattern/word to search. One can place the parameters for the pattern first, but only after" +
+                " the -e keyword. E.g."+ LineCounterClass.startHighlight +" grep -e System.out.print -f src" +
+                LineCounterClass.endHighlight+ ": search for the word System.out.println in the current path/src " +
+                "directory. Also:" + LineCounterClass.startHighlight +" grep -e System.out.print"  +
+                                LineCounterClass.endHighlight+ ": search for the word in question in the current" +
+                " directory. See more about paths and directories in the manual of the cd command.");
+        output.get(24).setManual("none", "Get environment variables, such as working " +
+                "directory, user info, o.s. information etc.");
+        output.get(25).setManual("none", "returns the user who is currently active" +
+                " at the present computer.");
         Collections.sort(output);
 
         generated = true;

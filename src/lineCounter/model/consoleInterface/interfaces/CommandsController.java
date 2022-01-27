@@ -11,6 +11,8 @@ public interface CommandsController {
     public void exitOperation();
     public void setConsolePrinter(Terminal consolePrinter);
 
+    public String searchFirstThatContains(String pattern);
+
     public void updateStdInStdOut(InputTerminal t, OutputTerminal t1);
 
     public void close();

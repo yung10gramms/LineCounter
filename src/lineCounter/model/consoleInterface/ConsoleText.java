@@ -1,5 +1,6 @@
 package lineCounter.model.consoleInterface;
 
+import lineCounter.model.LineCounterClass;
 import lineCounter.model.SystemHandler;
 import lineCounter.model.commands.CommandSystem;
 import lineCounter.model.consoleInterface.interfaces.Colored;
@@ -11,10 +12,8 @@ import lineCounter.model.devices.OutputDevice;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Map;
 
 public class ConsoleText extends JTextPane implements Colored,
         InputTerminal, OutputTerminal, InputDevice, OutputDevice {
@@ -23,18 +22,11 @@ public class ConsoleText extends JTextPane implements Colored,
 
     private static final Font defaultFont = new Font("Dialog", Font.PLAIN, 14);
 
-    private final String openingString =
-            "\n====================================================\n" +
-            "Welcome to this console simulator. Type 'help' to view available commands\n" +
-            "====================================================\n";
     private final CommandSystem system;
 
     private String entireText;
-    private String lastCommand;
 
     private final ConsolePanel panel;
-
-    private String[] bufferedData;
 
     private InputDevice inputDevice;
     private OutputDevice outputDevice;
@@ -49,6 +41,9 @@ public class ConsoleText extends JTextPane implements Colored,
 
         setColorsToDefaults();
         setFont(defaultFont);
+        String openingString = "\n====================================================\n" +
+                "Welcome to this console simulator. Type 'help' to view available commands\n" +
+                "====================================================\n";
         setText(openingString);
         setBounds(0, 0, 700, 500);
         setPreferredSize(new Dimension(700, 500));
@@ -57,6 +52,7 @@ public class ConsoleText extends JTextPane implements Colored,
         this.system = system;
         addKeyListener(system.getConsoleView());
         startNextLine();
+        //startNextLine();
     }
 
     public ConsolePanel panel()
@@ -72,7 +68,7 @@ public class ConsoleText extends JTextPane implements Colored,
 
     public String[] clear()
     {
-        ConsoleFrame frame = (ConsoleFrame) panel.parent();
+        ConsoleFrame frame = panel.parent();
         frame.reset();
         return new String[] {""};
     }
@@ -86,18 +82,16 @@ public class ConsoleText extends JTextPane implements Colored,
             doc.remove(entireText.length(), getCommand().length());
         } catch (BadLocationException b)
         {
-           System.out.println("exeption");
+            /* skip exception */
         }
 
     }
 
     public String getCommand()
     {
-        lastCommand = getText();
-        //lastCommand.trim();
-        //entireText.trim();
+        String lastCommand = getText();
+
         lastCommand = lastCommand.replace(entireText, "");
-        bufferedData = new String[]{lastCommand};
         return lastCommand;
     }
 
@@ -119,12 +113,12 @@ public class ConsoleText extends JTextPane implements Colored,
 
     public void startNextLine()
     {
-        appendToPane(system.getCurrentPath()+"$", theme.getMisc());
-        appendToPane(" ", theme.getForeGround());
+        setTextForConsole();
         DefaultStyledDocument doc = (DefaultStyledDocument) getDocument();
         doc.setDocumentFilter(new Filter(getText().length()));
         entireText = getText();
         appendToPane(" ", theme.getForeGround());
+        this.setCaretPosition( this.getDocument().getLength() - 1 );
     }
 
     @Override
@@ -135,15 +129,43 @@ public class ConsoleText extends JTextPane implements Colored,
     public void appendToPane(String msg, Color c)
     {
         StyleContext sc = StyleContext.getDefaultStyleContext();
-        AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
+        AttributeSet attributeSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
 
-        aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
-        aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
+        attributeSet = sc.addAttribute(attributeSet, StyleConstants.FontFamily, "Lucida Console");
+        attributeSet = sc.addAttribute(attributeSet, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
 
         int len = this.getDocument().getLength();
         this.setCaretPosition(len);
-        this.setCharacterAttributes(aset, false);
+        this.setCharacterAttributes(attributeSet, false);
         this.replaceSelection(msg);
+    }
+
+    public void addWithHighlights(String msg, String msgToHighLight)
+    {
+        String[] msgArray = msg.split("\n");
+
+
+        for(String cur : msgArray)
+        {
+            if(cur.contains(msgToHighLight))
+            {
+                String[] to_print = cur.split(msgToHighLight);
+                int count = 0;
+                for(String printerHelp : to_print)
+                {
+                    appendToPane(printerHelp);
+                    if(count < to_print.length - 1)
+                    {
+                        appendToPane(msgToHighLight, theme.getMisc());
+                    }
+                    count++;
+                }
+            } else
+            {
+                appendToPane(cur);
+            }
+            appendToPane("\n");
+        }
     }
 
     public void appendToPane(String msg)
@@ -177,12 +199,12 @@ public class ConsoleText extends JTextPane implements Colored,
     {
         if(output == null)
         {
+            appendToPane( "\n", theme.getForeGround());
             return;
         }
         appendToPane( "\n", theme.getForeGround());
-        for (int i = 0; i < output.length; i ++)
-        {
-            appendToPane( output[i] + "\n", theme.getForeGround());
+        for (String s : output) {
+            appendToPane(s + "\n", theme.getForeGround());
         }
     }
 
@@ -193,17 +215,87 @@ public class ConsoleText extends JTextPane implements Colored,
         system.close();
     }
 
-    //todo
+
     @Override
     public void passInput(String[] in) {
-        bufferedData = in;
         StringBuilder in_string = new StringBuilder("\n");
         for(String buf : in)
         {
             in_string.append(buf).append("\n");
         }
-        in_string.toString().replace("\n\n", "\n");
-        appendToPane(in_string.toString());
+        //in_string.toString().replace("\n\n", "\n");
+
+        if(in_string.toString().contains(LineCounterClass.startHighlight)
+                && in_string.toString().contains(LineCounterClass.endHighlight))
+        {
+
+            String highlightedText =
+                    in_string.substring(in_string.indexOf(LineCounterClass.startHighlight));
+            highlightedText =
+                    highlightedText.substring(0, highlightedText.indexOf(LineCounterClass.endHighlight));
+            highlightedText = highlightedText.replace(LineCounterClass.endHighlight, "");
+            highlightedText = highlightedText.replace(LineCounterClass.startHighlight, "");
+
+            String out = in_string.toString().replace(LineCounterClass.endHighlight, "");
+            out = out.replace(LineCounterClass.startHighlight, "");
+
+            addWithHighlights(out, highlightedText);
+        }
+        else
+        {
+            appendToPane(in_string.toString().replace("\n\n", "\n"));
+        }
+
+    }
+
+    public void setTextForConsole()
+    {
+        if(! Arrays.toString(system.getEnv()).contains("ubuntu"))
+        {
+            String printInRight = system.getCurrentPath() + "$";
+            if(! getText().endsWith("\n"))
+                appendToPane("\n", theme.getMisc());
+            appendToPane(printInRight, theme.getMisc());
+            return;
+        }
+
+        Map<String, String> envMap = System.getenv();
+        String string_1 = envMap.get("SESSION_MANAGER").split("/")[1];
+        if(string_1.contains(":@"))
+        {
+            string_1 = string_1.replace(":@", "");
+        }
+        String userName = envMap.get("PATH").split("/")[2];
+
+        String builder = userName +
+                "@" +
+                string_1;
+
+        String pathString;
+        if(system.getCurrentPath().startsWith("/home/"+userName))
+        {
+            if(system.getCurrentPath().contentEquals("/home/"+userName) ||
+                    system.getCurrentPath().contentEquals("/home/"+userName+"/"))
+            {
+                pathString = "~";
+            } else
+            {
+                pathString = system.getCurrentPath().replace("/home/"+userName, "~");
+            }
+        } else
+        {
+            pathString = system.getCurrentPath();
+        }
+        if(! getText().endsWith("\n"))
+            appendToPane("\n", theme.getMisc());
+        appendToPane(builder, theme.getMisc());
+        appendToPane(":");
+        Color color = new Color(80, 100, 240);
+        appendToPane(pathString, color);
+        appendToPane("$");
+
+        appendToPane(" ", theme.getForeGround());
+
     }
 
     @Override

@@ -15,6 +15,7 @@ import lineCounter.model.devices.rfiles.RFile;
 import lineCounter.model.serialize.StorageHandler;
 
 
+import javax.swing.*;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,8 @@ import java.util.Vector;
 
 public class CommandSystem implements CommandsController {
     private String currentPath;
+
+    private final String homeDir;
 
     private final Vector<Command_> system_commands;
     private Vector<String> commandsInserted;
@@ -49,17 +52,26 @@ public class CommandSystem implements CommandsController {
     private static final int COUNT_JAVA = 3;
     private static final int COUNT_C = 4;
 
+    private String directoryToken = "/";
+
     private CommandSystem()
     {
+        /* start by getting the current path */
         currentPath = System.getProperty("user.dir");
+        homeDir = currentPath;
+
+        /* Windows moment */
+        if(currentPath.contains("\\"))
+            directoryToken = "\\";
+
         system_commands = CommandDatabase.getCommands();
         commandsInserted = StorageHandler.loadCommandHistory(currentPath);
         consoleView = new ConsoleView(this);
 
-        System.out.println(System.getenv());
-
+        /* index for browsing though the already inserted commands */
         if(commandsInserted.size() != 0)
-            currentCommandIndex = commandsInserted.size() - 1;
+            currentCommandIndex = commandsInserted.size();
+
     }
 
     public ConsoleView getConsoleView()
@@ -79,6 +91,8 @@ public class CommandSystem implements CommandsController {
             consolePrinter.print(commandsInserted.get(currentCommandIndex));
         } else
         {
+            if(currentCommandIndex < commandsInserted.size())
+                currentCommandIndex++;
             consolePrinter.print("");
         }
     }
@@ -115,22 +129,24 @@ public class CommandSystem implements CommandsController {
         if(! command_string.contentEquals(""))
         {
             /* get devices inserted */
-            Vector<Device> devicesPipeline =  getDevices(command_string);
-            if(devicesPipeline == null)
+            Vector<Device> devicesPipeline =   getDevices(command_string);
+            if(devicesPipeline == null) {
+                System.out.println("start next line!!!!");
+                consolePrinter.startNextLine();
                 return;
+            }
             /* since we have a pipeline of devices passing one's input to the output
             * of the following one, we need to connect them all */
+
             pipeAll(devicesPipeline);
             runPipeLine(devicesPipeline);
 
             commandsInserted.add(command_string);
         }
-        currentCommandIndex = commandsInserted.size() - 1;
+        currentCommandIndex = commandsInserted.size();
         consolePrinter.startNextLine();
 
     }
-
-
 
     /**
      * function that gets a string, splits it by " | ", and gets a device based on their name
@@ -139,6 +155,7 @@ public class CommandSystem implements CommandsController {
     {
         String token = " \\| ";
         String[] commandStrArray = commandString.split(token);
+
         Vector<Device> devicesPipeline = new Vector<>();
         for(String cur : commandStrArray)
         {
@@ -155,6 +172,7 @@ public class CommandSystem implements CommandsController {
                         consolePrinter.printCommandNotFound();
                         return null;
                     }
+
                     devicesPipeline.add(dev);
                 } catch (NullPointerException nex)
                 {
@@ -188,12 +206,6 @@ public class CommandSystem implements CommandsController {
         }
         if(devicePipeline.size() == 2)
         {
-            System.out.println("i'm just trying to simulate a pipe...");
-            if(devicePipeline.get(0) == null)
-                System.out.println("device pipe 0 is null");
-            if(devicePipeline.get(1) == null)
-                System.out.println("device pipe 1 is null");
-
             pipe((Device) consolePrinter, devicePipeline.get(0));
             pipe(devicePipeline.get(0), devicePipeline.get(1));
             pipe(devicePipeline.get(1), (Device) consolePrinter);
@@ -208,11 +220,6 @@ public class CommandSystem implements CommandsController {
 
     public void runPipeLine(Vector<Device> devicePipeline)
     {
-        for(Device d : devicePipeline)
-        {
-            if(d.getName() != null)
-                System.out.println("<" + d.getName() + ">");
-        }
         for(int i = 0; i < devicePipeline.size(); i ++)
         {
             if(devicePipeline.get(i).getName() != null)
@@ -255,9 +262,7 @@ public class CommandSystem implements CommandsController {
                 }
             } else
             {
-                if(devicePipeline.get(i) == null)
-                    System.out.println("we are doomed");
-                System.out.println("wow: " +i);
+                JOptionPane.showMessageDialog(null, "Error occurred. Try to restart");
             }
 
         }
@@ -266,10 +271,6 @@ public class CommandSystem implements CommandsController {
 
     public void handleCommand(Program program)
     {
-        //System.out.println("we are handling the command " + program.getName());
-
-        if(program.getOutputDevice() == null)
-            System.out.println("NULL");
 
         if(program.getName().contentEquals("help"))
         {
@@ -277,7 +278,6 @@ public class CommandSystem implements CommandsController {
         }
         if(program.getName().contains("linecounter"))
         {
-            System.out.println(program.getName());
             program.getOutputDevice().passInput(lineCounter(program.getCommand()));
         }
         if(program.getName().contentEquals("ls"))
@@ -361,6 +361,18 @@ public class CommandSystem implements CommandsController {
         {
             program.getOutputDevice().passInput(devs());
         }
+        if(program.getName().contentEquals("grep"))
+        {
+            program.getOutputDevice().passInput(grep(program.getCommand()));
+        }
+        if(program.getName().contentEquals("env"))
+        {
+            program.getOutputDevice().passInput(getEnv());
+        }
+        if(program.getName().contentEquals("whoami"))
+        {
+            program.getOutputDevice().passInput(whoami());
+        }
     }
 
 
@@ -388,13 +400,13 @@ public class CommandSystem implements CommandsController {
     public void exitOperation()
     {
 
-        StorageHandler.storeCommandsString(currentPath, commandsInserted);
+        StorageHandler.storeCommandsString(homeDir, commandsInserted);
         exit();
     }
 
     private void fixPath()
     {
-        currentPath = currentPath.replace("//", "/");
+        currentPath = currentPath.replace(directoryToken + directoryToken, directoryToken);
     }
 
 
@@ -410,13 +422,11 @@ public class CommandSystem implements CommandsController {
         {
             if(! commandsPiped[i].trim().equals(splitToken.trim()) && ! commandsPiped[i].trim().equals(""))
             {
-                System.out.println("<"+ commandsPiped[i] + ">");
                 Command_ command = searchCommandByString(commandsPiped[i]);
                 if(command != null)
                 {
                     try
                     {
-                        System.out.println("/"+ commandsPiped[i].trim() +"/");
                         command.setOutputDevice(Objects.requireNonNull(SystemHandler.getDev(
                                 commandsPiped[i + 2].trim())).mainPanel().consoleText());
                         return command;
@@ -482,7 +492,7 @@ public class CommandSystem implements CommandsController {
 
     public File getFile(String path)
     {
-        if(path.startsWith("/"))
+        if(path.startsWith(directoryToken))
         {
             Path pathInstance = Paths.get(path);
             if(Files.exists(pathInstance))
@@ -491,8 +501,8 @@ public class CommandSystem implements CommandsController {
             }
             return null;
         }
-        String concat = currentPath + "/" + path;
-        concat = concat.replace("//", "/");
+        String concat = currentPath + directoryToken + path;
+        concat = concat.replace(directoryToken + directoryToken, directoryToken);
         Path pathInstance = Paths.get(concat);
         if(Files.exists(pathInstance))
         {
@@ -534,8 +544,18 @@ public class CommandSystem implements CommandsController {
     private String[] linesHelp(Command_ command, int use)
     {
         String[] out = new String[2];
+        int nexNonEmpty = 0;
+        if(command.getParams() != null) {
+            for (String butt : command.getParams()) {
+                if(butt.length() == 0)
+                    nexNonEmpty++;
+            }
+            if(nexNonEmpty == command.getParams().length)
+                nexNonEmpty = 0;
+        }
         if(command.getParams() == null || command.getParams().length == 0 ||
-                command.getParams()[0] == null || command.getParams()[0].contentEquals(""))
+                command.getParams()[nexNonEmpty] == null ||
+                command.getParams()[nexNonEmpty].contentEquals(""))
         {
             Path path = Paths.get(currentPath);
             if(Files.exists(path))
@@ -569,9 +589,10 @@ public class CommandSystem implements CommandsController {
         }
         else
         {
-            String path = command.getParams()[0];
+            String path = command.getParams()[nexNonEmpty];
             LineCounterClass lin = new LineCounterClass(path, currentPath);
             out[0] = "line counter: ";
+
 
             if(use == COUNT_ALL)
                 out[1] = CommandDatabase.tabSpaces +lin.getNumAll() + " lines";
@@ -605,57 +626,84 @@ public class CommandSystem implements CommandsController {
 
     public String[] cd(Command_ command)
     {
-        StringBuilder path_in_cd = new StringBuilder(getNextParam(command));
+        String commandString = getNextParam(command);
+        StringBuilder path_in_cd = new StringBuilder(commandString);
         if(path_in_cd.length() == 0)
         {
             return no_output_str;
         }
         if(path_in_cd.charAt(0) == '/')
         {
-            return cdHelp( path_in_cd.toString());
+            return cdHelp( path_in_cd.toString() );
         }
         else if(path_in_cd.charAt(0) == '.')
         {
-            if(! path_in_cd.toString().contentEquals(".."))
+            String[] path = commandString.trim().split(directoryToken);
+            int count = 0;
+            for(String curPathString : path)
             {
-                return new String[]{"false input"};
+                if(! curPathString.contentEquals("..") && ! curPathString.contentEquals(directoryToken))
+                {
+                    /* basically returns error message */
+                   return cdHelpValidate("random path", false);
+                }
+                if(curPathString.contentEquals(".."))
+                {
+                    count++;
+                }
+            }
+            String[] parentDir = currentPath.split(directoryToken);
+            int lastIndex;
+            if(parentDir.length  > 2 && parentDir[parentDir.length - 1].equals(directoryToken))
+            {
+                lastIndex = parentDir.length - 2;
+            }
+            else if(parentDir.length > 1)
+            {
+                lastIndex = parentDir.length - 1;
             }
             else
             {
-                String[] parentDir = currentPath.split("/");
-                int lastIndex;
-                if(parentDir[parentDir.length - 1].equals("/"))
-                {
-                    lastIndex = parentDir.length - 2;
-                }
-                else
-                {
-                    lastIndex = parentDir.length - 1;
-                }
-                String[] builtStrArray = new String[lastIndex];
-                path_in_cd = new StringBuilder();
-                System.arraycopy(parentDir, 0, builtStrArray, 0, lastIndex);
-                for(int i = 0; i < lastIndex; i ++)
-                {
-                    path_in_cd.append("/").append(builtStrArray[i]);
-                }
-                path_in_cd.append("/");
-
-                return cdHelp(path_in_cd.toString());
+                return cdHelpValidate("invalid", false);
             }
+            int countDirsAbove = 1;
+            while(countDirsAbove < count)
+            {
+                lastIndex = lastIndex - 1;
+                if(lastIndex == 0)
+                    return cdHelpValidate("invalid", false);
+                while(parentDir[lastIndex].equals(directoryToken))
+                    lastIndex = lastIndex - 1;
+                countDirsAbove++;
+            }
+            String[] builtStrArray = new String[lastIndex];
+            path_in_cd = new StringBuilder();
+            System.arraycopy(parentDir, 0, builtStrArray, 0, lastIndex);
+            for(int i = 0; i < lastIndex; i ++)
+            {
+                path_in_cd.append(directoryToken).append(builtStrArray[i]);
+            }
+            path_in_cd.append(directoryToken);
+            return cdHelp(path_in_cd.toString());
+
         }
         else //child dir
         {
-            return cdHelp(currentPath + "/" +path_in_cd);
+            return cdHelp(currentPath + directoryToken +path_in_cd);
         }
 
     }
 
     private String[] cdHelp(String path_in_cd)
     {
+        return cdHelpValidate(path_in_cd, true);
+    }
+
+    private String[] cdHelpValidate(String path_in_cd, boolean valid)
+    {
         Path path = Paths.get(path_in_cd);
 
-        if(Files.exists(path))
+        if(Files.exists(path) && valid)
         {
             File file = new File(path_in_cd);
             if(file.isDirectory())
@@ -752,6 +800,8 @@ public class CommandSystem implements CommandsController {
                 command.getParams()[0] == null || command.getParams()[0].contentEquals(""))
         {
 
+            System.out.println("param0: " + command.getParams()[0]);
+
             Path path = Paths.get(currentPath);
             if(Files.exists(path))
             {
@@ -785,8 +835,8 @@ public class CommandSystem implements CommandsController {
                 Vector<String> data = lin.getLines();
                 out = data.toArray(new String[0]);
             }
-            String absolute_path = currentPath + "/" + path_string;
-            absolute_path = absolute_path.replace("//", "/");
+            String absolute_path = currentPath + directoryToken + path_string;
+            absolute_path = absolute_path.replace("//", directoryToken);
             absolute_path = absolute_path.trim();
             path_instance = Paths.get(absolute_path);
             if(Files.exists(path_instance))
@@ -822,7 +872,7 @@ public class CommandSystem implements CommandsController {
 
     public String[] klk(OutputTerminal out, int n)
     {
-        String[] kol = {"koloythia game is over"};
+        String[] kol = {"kolokythia game is over"};
         int nhelp = n;
         while(nhelp > 0)
         {
@@ -862,6 +912,171 @@ public class CommandSystem implements CommandsController {
         }
         actives[actives.length - 1] = "===============================================";
         return actives;
+    }
+
+    public String[] grep(Command_ command)
+    {
+        Vector<String> output;
+
+        String[] params = command.getParams();
+
+
+        final int obtain_file = 4;
+        final int obtain_use = 5;
+        final int seek = 0;
+
+        LineCounterClass lineCounterClass = null;
+
+        int use;
+        int next_use = seek;
+        String pattern = "";
+        for(String cur : params)
+        {
+            use = next_use;
+            if(cur.startsWith("-"))
+            {
+                if(use != seek) {
+                    /* error - false input */
+                    consolePrinter.printCommandNotFound();
+                    return no_output_str;
+                }
+                if(cur.equals("-f"))
+                {
+                    next_use = obtain_file;
+                }
+                else if (cur.equals("-e"))
+                {
+                    next_use = obtain_use;
+                }
+                else
+                {
+                    /* error - false input */
+                    System.out.println("searching for -e,-f, sth else given");
+                    consolePrinter.printCommandNotFound();
+                    return no_output_str;
+                }
+            }
+            if(use == obtain_file)
+            {
+                File fileGot = getFile(cur);
+                if(fileGot == null)
+                {
+                    System.out.println("File got is null");
+                    consolePrinter.printCommandNotFound();
+                    return no_output_str;
+                }
+                lineCounterClass =
+                        new LineCounterClass(fileGot.getAbsolutePath(), currentPath);
+
+                next_use = seek;
+            }
+            if(use == obtain_use)
+            {
+                pattern = cur;
+            }
+        }
+
+
+        if(lineCounterClass == null)
+        {
+            lineCounterClass =
+                    new LineCounterClass(currentPath, currentPath);
+            System.out.println("line-counter class is null");
+        }
+        if(pattern.equals(""))
+        {
+            consolePrinter.printCommandNotFound();
+            return no_output_str;
+        }
+
+        output = lineCounterClass.findPattern(pattern);
+
+        return output.toArray(new String[0]);
+    }
+
+    public String searchFirstThatContains(String pattern)
+    {
+        if(pattern.trim().equals(""))
+            return "";
+
+        String outputString = pattern;
+
+        String[] patternSplitArray = pattern.split(" ");
+
+        if(patternSplitArray.length > 1)
+            pattern = patternSplitArray[patternSplitArray.length - 1].trim();
+
+        outputString = outputString.replace(pattern, "");
+
+        for(Command_ command_ : system_commands)
+        {
+            if(command_.getName().startsWith(pattern))
+            {
+                return outputString + command_.getName();
+            }
+        }
+        if(pattern.startsWith(directoryToken))
+        {
+            String[] patternStringArray = pattern.split(directoryToken);
+            StringBuilder builder = new StringBuilder();
+
+            int counter = 0;
+            for(String current : patternStringArray)
+            {
+                if(counter < patternStringArray.length - 1)
+                {
+                    builder.append(current);
+                }
+            }
+            String pathBuilt = builder.toString();
+            System.out.println("pathBuilt: " + pathBuilt);
+            File fileGot = getFile(pathBuilt);
+            if(fileGot == null)
+            {
+                return null;
+            }
+            /* start searching in current directory for file given */
+            String searchingResult = searchForFileThatStartsWith(fileGot.getAbsolutePath());
+            if(searchingResult != null) {
+                return outputString + searchingResult;
+            }
+        }
+        String searchingResult = searchForFileThatStartsWith(currentPath);
+        if(searchingResult != null)
+            return outputString + searchingResult;
+
+        for(Device dev : SystemHandler.activeDevices)
+        {
+            if(dev.getName().startsWith(pattern))
+                return outputString + dev.getName();
+        }
+
+        return null;
+    }
+
+    private String searchForFileThatStartsWith(String dir)
+    {
+        /* this will not create a null pointer exception */
+        File[] files = new File(dir).listFiles();
+        if(files == null)
+            return null;
+
+        for(File curFile : files)
+        {
+            if(curFile.getName().startsWith(dir))
+                return curFile.getName();
+        }
+        return null;
+    }
+
+    public String[] getEnv()
+    {
+        return System.getenv().toString().split(" ");
+    }
+
+    public String[] whoami()
+    {
+        return new String[]{System.getenv().get("PATH").split("/")[2]};
     }
 
 }

@@ -4,11 +4,11 @@ import lineCounter.model.consoleInterface.interfaces.terminal.InputTerminal;
 import lineCounter.model.consoleInterface.interfaces.terminal.OutputTerminal;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 public class Command_ implements Comparable<Command_>, Serializable {
     private final String name;
     private String[] params;
-
 
     private final String description;
 
@@ -17,7 +17,22 @@ public class Command_ implements Comparable<Command_>, Serializable {
     private InputTerminal inputTerminal;
     private OutputTerminal outputTerminal;
 
-    public Command_(String name, String description)
+    /* system commands are held here as well */
+    private static HashMap<String, Command_> existingCommands = new HashMap<>();
+
+    public static Command_ getCommand_(String name, String description)
+    {
+        Command_ command_requested = existingCommands.get(name);
+        if(command_requested == null)
+        {
+            Command_ output = new Command_(name, description);
+            existingCommands.put(name, output);
+            return output;
+        }
+        return command_requested;
+    }
+
+    private Command_(String name, String description)
     {
         this.name = name;
         this.description = description;
