@@ -2,7 +2,7 @@ package lineCounter.model.commands;
 
 import lineCounter.model.LineCounterClass;
 import lineCounter.model.SystemHandler;
-import lineCounter.model.consoleInterface.*;
+import lineCounter.model.consoleInterface.ConsoleView;
 import lineCounter.model.consoleInterface.interfaces.CommandsController;
 import lineCounter.model.consoleInterface.interfaces.terminal.InputTerminal;
 import lineCounter.model.consoleInterface.interfaces.terminal.OutputTerminal;
@@ -14,7 +14,6 @@ import lineCounter.model.devices.Program;
 import lineCounter.model.devices.rfiles.RFile;
 import lineCounter.model.serialize.StorageHandler;
 
-
 import javax.swing.*;
 import java.io.File;
 import java.nio.file.Files;
@@ -25,33 +24,44 @@ import java.util.Objects;
 import java.util.Vector;
 
 public class CommandSystem implements CommandsController {
-    private String currentPath;
 
+    /* current path is changing with cd */
+    private String currentPath;
     private final String homeDir;
 
+    /* the program uses a lot of Vectors */
+
+    /* all commands available for the user (1), and the command history (loaded from file) (2) */
     private final Vector<Command_> system_commands;
     private Vector<String> commandsInserted;
 
+    /* pointer for browsing command history */
     private int currentCommandIndex;
 
+    /* terminal interface - although we are using MVC, we still need it for some closing operations etc */
     private Terminal consolePrinter;
 
+    /* some constants */
     private static final String[] no_output_str = {""};
     private static final String[] command_not_found = {"\ncommand not found\n"};
 
+    /* class is singleton */
     private static final CommandSystem instance = new CommandSystem();
     public static CommandSystem getInstance()
     {
         return instance;
     }
 
+    /* the viewer class (and listener as well) */
     private final ConsoleView consoleView;
 
+    /* constants for line counter operations */
     private static final int COUNT_ALL = 1;
     private static final int COUNT_NON_EMPTY = 2;
     private static final int COUNT_JAVA = 3;
     private static final int COUNT_C = 4;
 
+    /* in windows this migth be set to backslash */
     private String directoryToken = "/";
 
     private CommandSystem()
@@ -192,6 +202,7 @@ public class CommandSystem implements CommandsController {
         reader.setInputDevice((InputDevice) writer);
     }
 
+    /* run the function pipe for all devices so they are piped with one another */
     public void pipeAll(Vector<Device> devicePipeline)
     {
         if(devicePipeline == null)
@@ -262,6 +273,7 @@ public class CommandSystem implements CommandsController {
                 }
             } else
             {
+                /* this isn't supposed to occur, and so far it hasn't */
                 JOptionPane.showMessageDialog(null, "Error occurred. Try to restart");
             }
 
@@ -355,7 +367,7 @@ public class CommandSystem implements CommandsController {
         if(program.getName().contentEquals("klk"))
         {
             //todo revisit
-            program.getOutputDevice().passInput(klk(program.getCommand().getOutputDevice(), 5000));
+            program.getOutputDevice().passInput(klk(program.getCommand().getOutputDevice()));
         }
         if(program.getName().contentEquals("devs"))
         {
@@ -470,6 +482,8 @@ public class CommandSystem implements CommandsController {
         }
         return null;
     }
+
+    /**************************************** command functions *****************************************/
 
     public String[] help()
     {
@@ -870,6 +884,11 @@ public class CommandSystem implements CommandsController {
         return no_output_str;
     }
 
+    public String[] klk(OutputTerminal out)
+    {
+        return klk(out, 5000);
+    }
+
     public String[] klk(OutputTerminal out, int n)
     {
         String[] kol = {"kolokythia game is over"};
@@ -910,16 +929,16 @@ public class CommandSystem implements CommandsController {
             actives[i] = i+ ". " +dev.getName();
             i++;
         }
-        actives[actives.length - 1] = "===============================================";
+        actives[actives.length - 1] = "===============================================\n";
         return actives;
     }
 
     public String[] grep(Command_ command)
     {
+
         Vector<String> output;
 
         String[] params = command.getParams();
-
 
         final int obtain_file = 4;
         final int obtain_use = 5;
@@ -994,6 +1013,7 @@ public class CommandSystem implements CommandsController {
         return output.toArray(new String[0]);
     }
 
+    /* pattern is always non-null */
     public String searchFirstThatContains(String pattern)
     {
         if(pattern.trim().equals(""))
@@ -1010,7 +1030,7 @@ public class CommandSystem implements CommandsController {
 
         for(Command_ command_ : system_commands)
         {
-            if(command_.getName().startsWith(pattern))
+            if(command_.getName().startsWith(pattern.trim()))
             {
                 return outputString + command_.getName();
             }
@@ -1051,6 +1071,14 @@ public class CommandSystem implements CommandsController {
                 return outputString + dev.getName();
         }
 
+        for(String command_string_history : commandsInserted)
+        {
+            if(command_string_history.trim().startsWith(pattern.trim()))
+            {
+                return pattern;
+            }
+        }
+
         return null;
     }
 
@@ -1078,5 +1106,6 @@ public class CommandSystem implements CommandsController {
     {
         return new String[]{System.getenv().get("PATH").split("/")[2]};
     }
+
 
 }

@@ -49,6 +49,7 @@ public class CommandDatabase {
         output.add(Command_.getCommand_("env", "get environment variables"));
         output.add(Command_.getCommand_("whoami", "get user name"));
 
+
         output.get(0).setManual("none",
                 "Pretty self explanatory. " +
                 "It just prints all available commands in the worst possible way.\n");

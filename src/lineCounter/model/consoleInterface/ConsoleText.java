@@ -20,6 +20,8 @@ public class ConsoleText extends JTextPane implements Colored,
     private Theme theme;
     private static final Theme defaultTheme = new Theme(Color.black, Color.white, Color.green);
 
+    private static boolean firstTime = true;
+
     private static final Font defaultFont = new Font("Dialog", Font.PLAIN, 14);
 
     private final CommandSystem system;
@@ -44,7 +46,8 @@ public class ConsoleText extends JTextPane implements Colored,
         String openingString = "\n====================================================\n" +
                 "Welcome to this console simulator. Type 'help' to view available commands\n" +
                 "====================================================\n";
-        setText(openingString);
+        if(firstTime)
+            setText(openingString);
         setBounds(0, 0, 700, 500);
         setPreferredSize(new Dimension(700, 500));
         setMinimumSize(new Dimension(700, 500));
@@ -52,7 +55,7 @@ public class ConsoleText extends JTextPane implements Colored,
         this.system = system;
         addKeyListener(system.getConsoleView());
         startNextLine();
-        //startNextLine();
+        firstTime = false;
     }
 
     public ConsolePanel panel()

@@ -46,7 +46,6 @@ public class ConsolePanel extends JPanel implements Colored {
         scrollPane.getVerticalScrollBar().setForeground(getBackground());
         scrollPane.getVerticalScrollBar().setBackground(getBackground());
         add(scrollPane);
-
     }
 
     private void setColorsToDefaults()

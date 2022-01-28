@@ -71,10 +71,8 @@ public class TerminalWrapper implements Runnable {
         new Thread(terminalWrapper).start();
     }
 
-    public static void main(String[] args)
+    public static void execute()
     {
         new BasicProgram().executeProgram();
     }
-
-
 }
